@@ -4,6 +4,7 @@ import com.earthguard.common.enums.AlertLevel;
 import com.earthguard.earthquake.dto.EarthquakeMapper;
 import com.earthguard.earthquake.dto.EarthquakeRequest;
 import com.earthguard.earthquake.dto.EarthquakeResponse;
+import com.earthguard.earthquake.exception.ResourceNotFoundException;
 import com.earthguard.earthquake.service.EarthquakeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +36,9 @@ public class EarthquakeController {
     @GetMapping("/{id}")
     public ResponseEntity<EarthquakeResponse> getById(@PathVariable String id) {
         log.debug("Fetching earthquake with id: {}", id);
-        return earthquakeService.findById(id)
-                .map(mapper::toResponse)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        var earthquake = earthquakeService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Earthquake", "id", id));
+        return ResponseEntity.ok(mapper.toResponse(earthquake));
     }
 
     @GetMapping

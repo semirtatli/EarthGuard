@@ -2,6 +2,7 @@ package com.earthguard.earthquake.service;
 
 import com.earthguard.common.entity.Earthquake;
 import com.earthguard.common.enums.AlertLevel;
+import com.earthguard.earthquake.exception.ResourceNotFoundException;
 import com.earthguard.earthquake.repository.EarthquakeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,12 @@ public class EarthquakeServiceImpl implements EarthquakeService {
     @Override
     public void deleteById(String id) {
         log.info("Deleting earthquake: id={}", id);
+
+        // Önce var mı kontrol et
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Earthquake", "id", id);
+        }
+
         repository.deleteById(id);
     }
 
