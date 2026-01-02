@@ -16,7 +16,7 @@ public class EarthquakeMapper {
         earthquake.setLocation(request.getLocation());
         earthquake.setTimestamp(request.getTimestamp());
         earthquake.setUrl(request.getUrl());
-        // alertLevel otomatik hesaplanacak (@PrePersist)
+        // calculate alertLevel automatically (@PrePersist)
         return earthquake;
     }
 

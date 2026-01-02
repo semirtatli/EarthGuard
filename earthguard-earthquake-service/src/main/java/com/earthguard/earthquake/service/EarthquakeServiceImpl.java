@@ -52,7 +52,7 @@ public class EarthquakeServiceImpl implements EarthquakeService {
     public void deleteById(String id) {
         log.info("Deleting earthquake: id={}", id);
 
-        // Önce var mı kontrol et
+        // First check if it exists
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Earthquake", "id", id);
         }

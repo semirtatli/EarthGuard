@@ -6,6 +6,7 @@ import com.earthguard.earthquake.dto.EarthquakeRequest;
 import com.earthguard.earthquake.dto.EarthquakeResponse;
 import com.earthguard.earthquake.exception.ResourceNotFoundException;
 import com.earthguard.earthquake.service.EarthquakeService;
+import com.earthguard.earthquake.service.EarthquakeSyncService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class EarthquakeController {
 
     private final EarthquakeService earthquakeService;
     private final EarthquakeMapper mapper;
+    private final EarthquakeSyncService syncService;
 
     @PostMapping
     public ResponseEntity<EarthquakeResponse> create(@Valid @RequestBody EarthquakeRequest request) {
@@ -117,5 +119,24 @@ public class EarthquakeController {
     @GetMapping("/count")
     public ResponseEntity<Long> getCount() {
         return ResponseEntity.ok(earthquakeService.getTotalCount());
+    }
+
+
+    @PostMapping("/sync")
+    public ResponseEntity<String> syncFromUsgs(
+            @RequestParam(required = false, defaultValue = "4.5") Double minMagnitude,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+
+        log.info("Triggering USGS sync: minMagnitude={}", minMagnitude);
+
+        LocalDateTime start = startTime != null ? LocalDateTime.parse(startTime) : null;
+        LocalDateTime end = endTime != null ? LocalDateTime.parse(endTime) : null;
+
+        int count = syncService.syncEarthquakes(minMagnitude, start, end);
+
+        return ResponseEntity.ok(
+                String.format("Successfully synced %d new earthquakes from USGS", count)
+        );
     }
 }
