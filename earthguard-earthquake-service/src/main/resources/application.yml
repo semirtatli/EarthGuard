@@ -16,6 +16,11 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  task:
+    scheduling:
+      pool:
+        size: 2
+      thread-name-prefix: earthquake-scheduler-
 
 server:
   port: 8081
