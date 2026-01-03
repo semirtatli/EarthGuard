@@ -64,16 +64,16 @@ public class UsgsEarthquakeClient {
         }
 
         if (startTime != null) {
-            builder.queryParam("starttime", formatUsgsTimestamp(startTime));  // ← DEĞİŞTİ
+            builder.queryParam("starttime", formatUsgsTimestamp(startTime));
         } else {
             // Default: last 30 days
-            builder.queryParam("starttime", formatUsgsTimestamp(LocalDateTime.now().minusDays(30)));  // ← DEĞİŞTİ
+            builder.queryParam("starttime", formatUsgsTimestamp(LocalDateTime.now().minusDays(30)));
         }
 
         if (endTime != null) {
-            builder.queryParam("endtime", formatUsgsTimestamp(endTime));  // ← DEĞİŞTİ
+            builder.queryParam("endtime", formatUsgsTimestamp(endTime));
         } else {
-            builder.queryParam("endtime", formatUsgsTimestamp(LocalDateTime.now()));  // ← DEĞİŞTİ
+            builder.queryParam("endtime", formatUsgsTimestamp(LocalDateTime.now()));
         }
 
         return builder.toUriString();
