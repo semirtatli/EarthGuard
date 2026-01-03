@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.earthguard.earthquake.messaging.EarthquakeEventProducer;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +28,24 @@ public class EarthquakeServiceImpl implements EarthquakeService {
     private final EarthquakeEventProducer eventProducer;
 
     @Override
+    @Cacheable(value = "earthquakeById", key = "#id")
+    @Transactional(readOnly = true)
+    public Optional<Earthquake> findById(String id) {
+        log.debug("Finding earthquake by id: {} (cache miss)", id);
+        return repository.findById(id);
+    }
+
+    @Override
+    @Cacheable(value = "earthquakes")
+    @Transactional(readOnly = true)
+    public List<Earthquake> findAll() {
+        log.debug("Finding all earthquakes (cache miss)");
+        return repository.findAll();
+    }
+
+    @Override
+    @CachePut(value = "earthquakeById", key = "#result.id")
+    @CacheEvict(value = {"earthquakes", "recentEarthquakes"}, allEntries = true)
     public Earthquake save(Earthquake earthquake) {
         log.info("Saving earthquake: id={}, magnitude={}",
                 earthquake.getId(), earthquake.getMagnitude());
@@ -41,29 +62,23 @@ public class EarthquakeServiceImpl implements EarthquakeService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Earthquake> findById(String id) {
-        log.debug("Finding earthquake by id: {}", id);
-        return repository.findById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Earthquake> findAll() {
-        log.debug("Finding all earthquakes");
-        return repository.findAll();
-    }
-
-    @Override
+    @CacheEvict(value = {"earthquakes", "recentEarthquakes", "earthquakeById"}, allEntries = true)
     public void deleteById(String id) {
         log.info("Deleting earthquake: id={}", id);
 
-        // First check if it exists
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Earthquake", "id", id);
         }
 
         repository.deleteById(id);
+    }
+
+    @Override
+    @Cacheable(value = "recentEarthquakes", key = "#limit")
+    @Transactional(readOnly = true)
+    public List<Earthquake> findRecent(int limit) {
+        log.debug("Finding {} most recent earthquakes (cache miss)", limit);
+        return repository.findTop10ByOrderByTimestampDesc();
     }
 
     @Override
@@ -78,14 +93,6 @@ public class EarthquakeServiceImpl implements EarthquakeService {
     public List<Earthquake> findByAlertLevel(AlertLevel alertLevel) {
         log.debug("Finding earthquakes with alert level: {}", alertLevel);
         return repository.findByAlertLevel(alertLevel);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Earthquake> findRecent(int limit) {
-        log.debug("Finding {} most recent earthquakes", limit);
-        // Note: There is no limit parameter inside JpaRepository , that is why top 10 is used
-        return repository.findTop10ByOrderByTimestampDesc();
     }
 
     @Override
