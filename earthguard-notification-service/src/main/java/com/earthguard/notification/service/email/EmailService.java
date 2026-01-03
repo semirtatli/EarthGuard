@@ -1,4 +1,8 @@
 package com.earthguard.notification.service.email;
 
-public class EmailService {
+import com.earthguard.notification.dto.EarthquakeEvent;
+
+public interface EmailService {
+    void sendEarthquakeAlert(EarthquakeEvent event, String recipient);
+    void sendBulkAlert(EarthquakeEvent event, String[] recipients);
 }
