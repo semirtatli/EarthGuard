@@ -2,6 +2,7 @@ package com.earthguard.earthquake.service;
 
 import com.earthguard.common.entity.Earthquake;
 import com.earthguard.common.enums.AlertLevel;
+import com.earthguard.earthquake.messaging.EarthquakeEventProducer;
 import com.earthguard.earthquake.repository.EarthquakeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +28,9 @@ class EarthquakeServiceImplTest {
 
     @Mock
     private EarthquakeRepository repository;
+
+    @Mock
+    private EarthquakeEventProducer eventProducer; // ← EKLE
 
     @InjectMocks
     private EarthquakeServiceImpl service;
@@ -46,10 +51,11 @@ class EarthquakeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should save earthquake successfully")
+    @DisplayName("Should save earthquake successfully and publish event")
     void testSave() {
         // Given
         when(repository.save(any(Earthquake.class))).thenReturn(testEarthquake);
+        doNothing().when(eventProducer).sendEarthquakeEvent(any(Earthquake.class), anyString()); // ← EKLE
 
         // When
         Earthquake result = service.save(testEarthquake);
@@ -60,6 +66,7 @@ class EarthquakeServiceImplTest {
         assertThat(result.getMagnitude()).isEqualTo(5.5);
 
         verify(repository, times(1)).save(testEarthquake);
+        verify(eventProducer, times(1)).sendEarthquakeEvent(testEarthquake, "CREATED"); // ← EKLE
     }
 
     @Test

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.earthguard.earthquake.messaging.EarthquakeEventProducer;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,16 +22,21 @@ public class EarthquakeServiceImpl implements EarthquakeService {
 
     private final EarthquakeRepository repository;
 
+    private final EarthquakeEventProducer eventProducer;
+
     @Override
     public Earthquake save(Earthquake earthquake) {
         log.info("Saving earthquake: id={}, magnitude={}",
                 earthquake.getId(), earthquake.getMagnitude());
 
-        // Calculate Alert level automatically (with @PrePersist)
         Earthquake saved = repository.save(earthquake);
 
         log.debug("Earthquake saved successfully with alert level: {}",
                 saved.getAlertLevel());
+
+        // Publish event to Kafka
+        eventProducer.sendEarthquakeEvent(saved, "CREATED");
+
         return saved;
     }
 
