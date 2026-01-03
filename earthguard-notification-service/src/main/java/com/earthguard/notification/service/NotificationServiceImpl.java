@@ -1,11 +1,12 @@
 package com.earthguard.notification.service;
 
 import com.earthguard.notification.dto.EarthquakeEvent;
+import com.earthguard.notification.service.email.EmailService;
+import com.earthguard.notification.service.websocket.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import com.earthguard.notification.service.email.EmailService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 public class NotificationServiceImpl implements NotificationService {
 
     private final EmailService emailService;
+    private final WebSocketService webSocketService;
 
     @Value("${earthguard.notification.default-recipients:admin@earthguard.com}")
     private String[] defaultRecipients;
@@ -21,7 +23,6 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendEmailNotification(EarthquakeEvent event) {
         log.info("📧 Processing email notification for earthquake: {}", event.getEarthquakeId());
 
-        // Send to default recipients
         for (String recipient : defaultRecipients) {
             emailService.sendEarthquakeAlert(event, recipient);
         }
@@ -31,11 +32,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendWebSocketNotification(EarthquakeEvent event) {
-        // Mock implementation for now (WebSocket next)
-        log.info("🔔 WEBSOCKET NOTIFICATION: Real-time alert sent!");
-        log.info("   Event: {}", event.getEventType());
-        log.info("   Magnitude: {} at {}", event.getMagnitude(), event.getLocation());
+        log.info("🔔 Processing WebSocket notification for earthquake: {}", event.getEarthquakeId());
 
-        // TODO: Real WebSocket implementation in next commit
+        webSocketService.broadcastEarthquakeAlert(event);
+
+        log.info("🔔 WebSocket notification completed");
     }
 }

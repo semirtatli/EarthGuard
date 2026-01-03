@@ -34,12 +34,13 @@ logging:
   level:
     com.earthguard: DEBUG
     org.springframework.kafka: INFO
+    org.springframework.messaging: INFO
 
-    # EarthGuard Configuration
-    earthguard:
-      email:
-        enabled: false  # Set to true to enable real email sending
-      notification:
-        default-recipients:
-          - admin@earthguard.com
-          - alerts@earthguard.com
+# EarthGuard Configuration
+earthguard:
+  email:
+    enabled: false
+  notification:
+    default-recipients:
+      - admin@earthguard.com
+      - alerts@earthguard.com
