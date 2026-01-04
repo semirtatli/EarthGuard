@@ -8,6 +8,7 @@
         <module>earthguard-common</module>
         <module>earthguard-earthquake-service</module>
         <module>earthguard-notification-service</module>
+        <module>earthguard-api-gateway</module>
     </modules>
     <groupId>com.earthguard</groupId>
     <artifactId>earthguard-parent</artifactId>
