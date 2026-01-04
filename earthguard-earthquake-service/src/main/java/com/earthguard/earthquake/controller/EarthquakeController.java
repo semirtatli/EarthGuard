@@ -1,5 +1,6 @@
 package com.earthguard.earthquake.controller;
 
+import com.earthguard.common.entity.Earthquake;
 import com.earthguard.common.enums.AlertLevel;
 import com.earthguard.earthquake.dto.EarthquakeMapper;
 import com.earthguard.earthquake.dto.EarthquakeRequest;
@@ -13,6 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.earthguard.earthquake.dto.PageResponse;
+import com.earthguard.earthquake.dto.filter.EarthquakeFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -138,5 +146,99 @@ public class EarthquakeController {
         return ResponseEntity.ok(
                 String.format("Successfully synced %d new earthquakes from USGS", count)
         );
+    }
+
+    /**
+     * Get earthquakes with pagination and sorting
+     *
+     * @param page Page number (0-based)
+     * @param size Page size
+     * @param sortBy Sort field (e.g., magnitude, timestamp)
+     * @param direction Sort direction (ASC or DESC)
+     */
+    @GetMapping("/paginated")
+    public ResponseEntity<PageResponse<EarthquakeResponse>> getAllPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "timestamp") String sortBy,
+            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+
+        log.debug("Fetching earthquakes: page={}, size={}, sortBy={}, direction={}",
+                page, size, sortBy, direction);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<Earthquake> earthquakePage = earthquakeService.findAll(pageable);
+
+        PageResponse<EarthquakeResponse> response = buildPageResponse(earthquakePage);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Advanced search with filters, pagination, and sorting
+     */
+    @GetMapping("/search")
+    public ResponseEntity<PageResponse<EarthquakeResponse>> search(
+            @RequestParam(required = false) Double minMagnitude,
+            @RequestParam(required = false) Double maxMagnitude,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(required = false) Double radiusKm,
+            @RequestParam(required = false) AlertLevel alertLevel,
+            @RequestParam(required = false) Integer minDepth,
+            @RequestParam(required = false) Integer maxDepth,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "timestamp") String sortBy,
+            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+
+        log.info("Advanced search request: minMag={}, maxMag={}, location={}, page={}, size={}",
+                minMagnitude, maxMagnitude, location, page, size);
+
+        EarthquakeFilter filter = EarthquakeFilter.builder()
+                .minMagnitude(minMagnitude)
+                .maxMagnitude(maxMagnitude)
+                .startDate(startDate)
+                .endDate(endDate)
+                .location(location)
+                .latitude(latitude)
+                .longitude(longitude)
+                .radiusKm(radiusKm)
+                .alertLevel(alertLevel)
+                .minDepth(minDepth)
+                .maxDepth(maxDepth)
+                .build();
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<Earthquake> earthquakePage = earthquakeService.findWithFilter(filter, pageable);
+
+        PageResponse<EarthquakeResponse> response = buildPageResponse(earthquakePage);
+
+        log.info("Search completed: {} results found", response.getTotalElements());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Helper method to convert Page to PageResponse
+     */
+    private PageResponse<EarthquakeResponse> buildPageResponse(Page<Earthquake> page) {
+        List<EarthquakeResponse> content = page.getContent().stream()
+                .map(mapper::toResponse)
+                .toList();
+
+        return PageResponse.<EarthquakeResponse>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .empty(page.isEmpty())
+                .build();
     }
 }

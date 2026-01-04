@@ -16,6 +16,10 @@ import org.springframework.cache.annotation.Cacheable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import com.earthguard.earthquake.dto.filter.EarthquakeFilter;
+import com.earthguard.earthquake.specification.EarthquakeSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -128,5 +132,20 @@ public class EarthquakeServiceImpl implements EarthquakeService {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
         log.info("Finding critical earthquakes in last {} hours (since: {})", hours, since);
         return repository.findRecentStrongEarthquakes(6.0, since);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Earthquake> findAll(Pageable pageable) {
+        log.debug("Finding earthquakes with pagination: page={}, size={}",
+                pageable.getPageNumber(), pageable.getPageSize());
+        return repository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Earthquake> findWithFilter(EarthquakeFilter filter, Pageable pageable) {
+        log.debug("Finding earthquakes with filter and pagination: {}", filter);
+        return repository.findAll(EarthquakeSpecification.withFilter(filter), pageable);
     }
 }

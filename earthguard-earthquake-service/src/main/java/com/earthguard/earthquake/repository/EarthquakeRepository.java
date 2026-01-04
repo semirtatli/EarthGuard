@@ -3,6 +3,7 @@ package com.earthguard.earthquake.repository;
 import com.earthguard.common.entity.Earthquake;
 import com.earthguard.common.enums.AlertLevel;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface EarthquakeRepository extends JpaRepository<Earthquake, String> {
+public interface EarthquakeRepository extends JpaRepository<Earthquake, String>, JpaSpecificationExecutor<Earthquake> {
 
     // Filter by Magnitude
     List<Earthquake> findByMagnitudeGreaterThanEqual(Double magnitude);

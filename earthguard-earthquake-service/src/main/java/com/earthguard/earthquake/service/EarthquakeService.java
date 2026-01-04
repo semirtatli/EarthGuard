@@ -2,6 +2,9 @@ package com.earthguard.earthquake.service;
 
 import com.earthguard.common.entity.Earthquake;
 import com.earthguard.common.enums.AlertLevel;
+import com.earthguard.earthquake.dto.filter.EarthquakeFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +26,8 @@ public interface EarthquakeService {
     List<Earthquake> findByLocation(String location);
     List<Earthquake> findNearby(Double latitude, Double longitude);
 
+    Page<Earthquake> findAll(Pageable pageable);
+    Page<Earthquake> findWithFilter(EarthquakeFilter filter, Pageable pageable);
     // Statistics
     long getTotalCount();
     List<Earthquake> findRecentCriticalAlerts(int hours);
