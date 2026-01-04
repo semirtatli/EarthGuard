@@ -44,3 +44,9 @@ earthguard:
     default-recipients:
       - admin@earthguard.com
       - alerts@earthguard.com
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:5173
+      - https://*.earthguard.com
+    max-age: 3600
