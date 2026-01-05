@@ -52,6 +52,9 @@ public class User {
     @Column(nullable = false)
     private Boolean credentialsNonExpired = true;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserPreference preference;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -83,4 +86,5 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }
