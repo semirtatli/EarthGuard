@@ -10,17 +10,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
   task:
     scheduling:
       pool:
         size: 2
       thread-name-prefix: earthquake-scheduler-
+
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -28,16 +30,18 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 2000ms
 
-    cache:
-      type: redis
-      redis:
-        time-to-live: 600000 # 10 minutes default
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutes default
+
 server:
   port: 8081
 
@@ -46,7 +50,7 @@ logging:
     com.earthguard: DEBUG
     org.hibernate.SQL: DEBUG
 
-    # CORS Configuration
+# CORS Configuration
 earthguard:
   cors:
     allowed-origins:
@@ -54,3 +58,8 @@ earthguard:
       - http://localhost:5173
       - https://*.earthguard.com
     max-age: 3600
+
+  # JWT Configuration
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970334336763979244226452948404D6351
+    expiration: 86400000 # 24 hours (24 * 60 * 60 * 1000 milliseconds)
