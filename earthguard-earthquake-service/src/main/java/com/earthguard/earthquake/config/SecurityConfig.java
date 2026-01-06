@@ -35,9 +35,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configure(http))
                 .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(
+                                "/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/earthquakes/sync").permitAll()
+
 
                         // Public read endpoints (anyone can view earthquakes)
                         .requestMatchers(HttpMethod.GET, "/api/earthquakes/**").permitAll()

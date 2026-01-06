@@ -21,6 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +33,7 @@ import java.util.List;
 @RequestMapping("/api/earthquakes")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Earthquakes", description = "Earthquake data management and search endpoints")
 public class EarthquakeController {
 
     private final EarthquakeService earthquakeService;
@@ -84,6 +89,10 @@ public class EarthquakeController {
     }
 
     @GetMapping("/recent")
+    @Operation(
+            summary = "Get recent earthquakes",
+            description = "Returns the most recent earthquakes (public endpoint)"
+    )
     public ResponseEntity<List<EarthquakeResponse>> getRecent(
             @RequestParam(defaultValue = "10") int limit) {
         log.debug("Fetching {} recent earthquakes", limit);
@@ -131,6 +140,11 @@ public class EarthquakeController {
 
 
     @PostMapping("/sync")
+    @Operation(
+            summary = "Sync earthquakes from USGS",
+            description = "Manually trigger earthquake data synchronization from USGS API (Admin only)",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     public ResponseEntity<String> syncFromUsgs(
             @RequestParam(required = false, defaultValue = "4.5") Double minMagnitude,
             @RequestParam(required = false) String startTime,
@@ -157,6 +171,11 @@ public class EarthquakeController {
      * @param direction Sort direction (ASC or DESC)
      */
     @GetMapping("/paginated")
+    @Operation(
+            summary = "Get earthquakes with pagination",
+            description = "Returns paginated earthquake data with sorting options",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
     public ResponseEntity<PageResponse<EarthquakeResponse>> getAllPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
