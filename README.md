@@ -12,20 +12,9 @@
 
 **Gerçek zamanlı deprem izleme ve erken uyarı sistemi — modern microservices mimarisiyle inşa edildi**
 
-[Canlı Demo](#-canlı-demo) · [Özellikler](#-özellikler) · [Mimari](#-mimari) · [Teknolojiler](#-teknolojiler) · [Kurulum](#-kurulum)
+[Özellikler](#-özellikler) · [Mimari](#-mimari) · [Teknolojiler](#-teknolojiler) · [Kurulum](#-kurulum)
 
 </div>
-
----
-
-## 🚀 Canlı Demo
-
-| Katman | Platform | Durum |
-|--------|----------|-------|
-| Frontend | Vercel | 🟢 Canlı |
-| Backend API | Render | 🟢 Canlı |
-
-> Frontend Vercel, backend microservice'ler Render üzerinde deploy edilmiştir.
 
 ---
 
@@ -136,8 +125,6 @@ Bu proje; microservices, event-driven architecture ve real-time communication gi
 |-----------|------|
 | Docker + Docker Compose | Konteyner orkestrasyonu |
 | Multi-stage Dockerfile | Optimize imaj boyutu |
-| Render | Backend cloud deployment |
-| Vercel | Frontend CDN deployment |
 
 ---
 
