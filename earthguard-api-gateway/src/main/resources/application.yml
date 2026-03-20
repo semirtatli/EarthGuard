@@ -7,7 +7,7 @@ spring:
       routes:
         # Earthquake Service Routes
         - id: earthquake-service
-          uri: http://localhost:8081
+          uri: ${EARTHQUAKE_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/earthquakes/**
           filters:
@@ -22,9 +22,27 @@ spring:
                 name: earthquakeServiceCircuitBreaker
                 fallbackUri: forward:/fallback/earthquake-service
 
+        # Auth Routes
+        - id: auth-service
+          uri: ${EARTHQUAKE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+
+        # Preferences Routes
+        - id: preferences-service
+          uri: ${EARTHQUAKE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/preferences/**
+
+        # Swagger Routes
+        - id: swagger-ui
+          uri: ${EARTHQUAKE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/swagger-ui/**,/api-docs/**,/v3/api-docs/**
+
         # Notification Service Routes
         - id: notification-service
-          uri: http://localhost:8082
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/notifications/**
           filters:
@@ -37,7 +55,7 @@ spring:
 
         # WebSocket Route (no rate limiting for WS)
         - id: websocket-service
-          uri: ws://localhost:8082
+          uri: ${NOTIFICATION_WS_URL:ws://localhost:8082}
           predicates:
             - Path=/ws/**
 
@@ -46,9 +64,11 @@ spring:
         cors-configurations:
           '[/**]':
             allowedOriginPatterns:
+              - "http://localhost"
               - "http://localhost:3000"
               - "http://localhost:5173"
               - "https://*.earthguard.com"
+              - "${FRONTEND_URL:http://localhost:3000}"
             allowedMethods:
               - GET
               - POST
@@ -64,8 +84,11 @@ spring:
   # Redis Configuration
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
       timeout: 2000ms
 
 server:
@@ -73,5 +96,5 @@ server:
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    com.earthguard: DEBUG
+    org.springframework.cloud.gateway: ${LOG_LEVEL:INFO}
+    com.earthguard: ${LOG_LEVEL:INFO}

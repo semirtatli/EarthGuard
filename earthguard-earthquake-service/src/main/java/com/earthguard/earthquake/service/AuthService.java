@@ -80,6 +80,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         log.info("User login attempt: {}", request.getUsername());
 

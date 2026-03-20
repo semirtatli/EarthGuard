@@ -2,7 +2,6 @@ package com.earthguard.earthquake.dto.preference;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +19,8 @@ public class UserPreferenceRequest {
     @DecimalMax(value = "180.0", message = "Longitude must be <= 180")
     private Double preferredLongitude;
 
-    @Min(value = 1, message = "Radius must be at least 1 km")
+    @DecimalMin(value = "1.0", message = "Radius must be at least 1 km")
+    @DecimalMax(value = "20000.0", message = "Radius must be at most 20000 km")
     private Double radiusKm;
 
     private String locationName;

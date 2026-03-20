@@ -21,21 +21,16 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendEmailNotification(EarthquakeEvent event) {
-        log.info("📧 Processing email notification for earthquake: {}", event.getEarthquakeId());
+        log.info("Sending email notification for earthquake {}", event.getEarthquakeId());
 
         for (String recipient : defaultRecipients) {
             emailService.sendEarthquakeAlert(event, recipient);
         }
-
-        log.info("📧 Email notification processed for {} recipients", defaultRecipients.length);
     }
 
     @Override
     public void sendWebSocketNotification(EarthquakeEvent event) {
-        log.info("🔔 Processing WebSocket notification for earthquake: {}", event.getEarthquakeId());
-
+        log.info("Sending WebSocket notification for earthquake {}", event.getEarthquakeId());
         webSocketService.broadcastEarthquakeAlert(event);
-
-        log.info("🔔 WebSocket notification completed");
     }
 }

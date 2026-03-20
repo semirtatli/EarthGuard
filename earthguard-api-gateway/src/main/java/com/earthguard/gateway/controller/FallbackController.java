@@ -3,11 +3,11 @@ package com.earthguard.gateway.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -16,25 +16,21 @@ public class FallbackController {
 
     @GetMapping("/earthquake-service")
     public ResponseEntity<Map<String, Object>> earthquakeServiceFallback() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
-        response.put("error", "Service Unavailable");
-        response.put("message", "Earthquake Service is currently unavailable. Please try again later.");
-        response.put("service", "earthquake-service");
-
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+        return buildFallbackResponse("earthquake-service");
     }
 
     @GetMapping("/notification-service")
     public ResponseEntity<Map<String, Object>> notificationServiceFallback() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
-        response.put("error", "Service Unavailable");
-        response.put("message", "Notification Service is currently unavailable. Please try again later.");
-        response.put("service", "notification-service");
+        return buildFallbackResponse("notification-service");
+    }
 
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    private ResponseEntity<Map<String, Object>> buildFallbackResponse(String serviceName) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "status", HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "error", "Service Unavailable",
+                "message", serviceName + " is currently unavailable. Please try again later.",
+                "service", serviceName
+        ));
     }
 }

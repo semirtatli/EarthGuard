@@ -1,17 +1,18 @@
 package com.earthguard.earthquake.messaging;
 
 import com.earthguard.common.entity.Earthquake;
+import com.earthguard.common.enums.AlertLevel;
 import com.earthguard.earthquake.config.KafkaTopicConfig;
 import com.earthguard.earthquake.dto.EarthquakeEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,10 @@ public class EarthquakeEventProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    /**
+     * Publishes earthquake event to Kafka AFTER the current transaction commits.
+     * This prevents sending events for data that gets rolled back.
+     */
     public void sendEarthquakeEvent(Earthquake earthquake, String eventType) {
         EarthquakeEvent event = EarthquakeEvent.builder()
                 .eventId(UUID.randomUUID().toString())
@@ -34,32 +39,38 @@ public class EarthquakeEventProducer {
                 .eventTimestamp(LocalDateTime.now())
                 .build();
 
-        String topic = determineTopicByAlertLevel(earthquake);
+        String topic = determineTopic(earthquake);
 
-        log.info("Publishing earthquake event: id={}, magnitude={}, alertLevel={}, topic={}",
-                earthquake.getId(), earthquake.getMagnitude(), earthquake.getAlertLevel(), topic);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    publishEvent(topic, earthquake.getId(), event);
+                }
+            });
+        } else {
+            publishEvent(topic, earthquake.getId(), event);
+        }
+    }
 
-        CompletableFuture<SendResult<String, Object>> future =
-                kafkaTemplate.send(topic, earthquake.getId(), event);
+    private void publishEvent(String topic, String key, EarthquakeEvent event) {
+        log.info("Publishing event: id={}, magnitude={}, topic={}", event.getEarthquakeId(), event.getMagnitude(), topic);
 
-        future.whenComplete((result, ex) -> {
+        kafkaTemplate.send(topic, key, event).whenComplete((result, ex) -> {
             if (ex == null) {
-                log.info("Successfully published event to Kafka: topic={}, partition={}, offset={}",
-                        topic,
-                        result.getRecordMetadata().partition(),
-                        result.getRecordMetadata().offset());
+                log.debug("Event published: topic={}, partition={}, offset={}",
+                        topic, result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
             } else {
-                log.error("Failed to publish event to Kafka: {}", ex.getMessage(), ex);
+                log.error("Failed to publish event {}: {}", event.getEarthquakeId(), ex.getMessage());
             }
         });
     }
 
-    private String determineTopicByAlertLevel(Earthquake earthquake) {
-        // Critical earthquakes (magnitude >= 6.0) go to critical-alerts topic
-        if (earthquake.getMagnitude() != null && earthquake.getMagnitude() >= 6.0) {
+    private String determineTopic(Earthquake earthquake) {
+        AlertLevel level = earthquake.getAlertLevel();
+        if (level == AlertLevel.CRITICAL || level == AlertLevel.HIGH) {
             return KafkaTopicConfig.CRITICAL_ALERTS_TOPIC;
         }
-        // All others go to general earthquake-events topic
         return KafkaTopicConfig.EARTHQUAKE_EVENTS_TOPIC;
     }
 }

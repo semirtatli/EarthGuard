@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EarthquakeEventListener {
 
+    private static final double EMAIL_THRESHOLD = 5.0;
+
     private final NotificationService notificationService;
 
     @KafkaListener(
@@ -20,27 +22,17 @@ public class EarthquakeEventListener {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void handleEarthquakeEvent(EarthquakeEvent event) {
-        log.info("=== RECEIVED EARTHQUAKE EVENT ===");
-        log.info("Event ID: {}", event.getEventId());
-        log.info("Earthquake ID: {}", event.getEarthquakeId());
-        log.info("Magnitude: {}", event.getMagnitude());
-        log.info("Location: {}", event.getLocation());
-        log.info("Alert Level: {}", event.getAlertLevel());
-        log.info("=================================");
+        log.info("Received earthquake event: id={}, magnitude={}, location={}",
+                event.getEarthquakeId(), event.getMagnitude(), event.getLocation());
 
         try {
-            // Send notifications
             notificationService.sendWebSocketNotification(event);
 
-            // Only send email for significant earthquakes (magnitude >= 5.0)
-            if (event.getMagnitude() != null && event.getMagnitude() >= 5.0) {
+            if (event.getMagnitude() != null && event.getMagnitude() >= EMAIL_THRESHOLD) {
                 notificationService.sendEmailNotification(event);
             }
-
-            log.info("Notifications processed successfully for earthquake: {}", event.getEarthquakeId());
-
         } catch (Exception e) {
-            log.error("Error processing earthquake event: {}", event.getEarthquakeId(), e);
+            log.error("Error processing earthquake event {}: {}", event.getEarthquakeId(), e.getMessage(), e);
         }
     }
 
@@ -50,29 +42,14 @@ public class EarthquakeEventListener {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void handleCriticalAlert(EarthquakeEvent event) {
-        log.warn("=== CRITICAL ALERT RECEIVED ===");
-        log.warn("🚨 CRITICAL EARTHQUAKE DETECTED! 🚨");
-        log.warn("Event ID: {}", event.getEventId());
-        log.warn("Earthquake ID: {}", event.getEarthquakeId());
-        log.warn("Magnitude: {}", event.getMagnitude());
-        log.warn("Location: {}", event.getLocation());
-        log.warn("Alert Level: {}", event.getAlertLevel());
-        log.warn("================================");
+        log.warn("CRITICAL ALERT: id={}, magnitude={}, location={}",
+                event.getEarthquakeId(), event.getMagnitude(), event.getLocation());
 
         try {
-            // Always send both notifications for critical earthquakes
             notificationService.sendEmailNotification(event);
             notificationService.sendWebSocketNotification(event);
-
-            // TODO: Additional critical alert actions
-            // - SMS notifications
-            // - Push notifications
-            // - Alert authorities
-
-            log.warn("Critical alert notifications sent for: {}", event.getEarthquakeId());
-
         } catch (Exception e) {
-            log.error("Error processing critical alert: {}", event.getEarthquakeId(), e);
+            log.error("Error processing critical alert {}: {}", event.getEarthquakeId(), e.getMessage(), e);
         }
     }
 }

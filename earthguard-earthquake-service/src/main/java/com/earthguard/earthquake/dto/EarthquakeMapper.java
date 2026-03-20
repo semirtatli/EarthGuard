@@ -3,6 +3,8 @@ package com.earthguard.earthquake.dto;
 import com.earthguard.common.entity.Earthquake;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class EarthquakeMapper {
 
@@ -16,7 +18,6 @@ public class EarthquakeMapper {
         earthquake.setLocation(request.getLocation());
         earthquake.setTimestamp(request.getTimestamp());
         earthquake.setUrl(request.getUrl());
-        // calculate alertLevel automatically (@PrePersist)
         return earthquake;
     }
 
@@ -35,5 +36,9 @@ public class EarthquakeMapper {
                         entity.getAlertLevel().getDescription() : null)
                 .createdAt(entity.getCreatedAt())
                 .build();
+    }
+
+    public List<EarthquakeResponse> toResponseList(List<Earthquake> entities) {
+        return entities.stream().map(this::toResponse).toList();
     }
 }

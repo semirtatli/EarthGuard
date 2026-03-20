@@ -15,70 +15,47 @@ import java.util.UUID;
 @Slf4j
 public class WebSocketService {
 
+    private static final double CRITICAL_THRESHOLD = 7.0;
+    private static final double HIGH_THRESHOLD = 6.0;
+    private static final double MODERATE_THRESHOLD = 5.0;
+
     private final SimpMessagingTemplate messagingTemplate;
 
     public void broadcastEarthquakeAlert(EarthquakeEvent event) {
-        WebSocketMessage message = createWebSocketMessage(event);
+        WebSocketMessage message = createMessage(event);
+        String destination = event.getMagnitude() >= HIGH_THRESHOLD
+                ? "/topic/critical-alerts"
+                : "/topic/earthquakes";
 
-        String destination = determineDestination(event);
-
-        log.info("🔔 Broadcasting WebSocket message to {}", destination);
-        log.debug("Message: {}", message);
-
+        log.info("Broadcasting to {}: magnitude={}", destination, event.getMagnitude());
         messagingTemplate.convertAndSend(destination, message);
-
-        log.info("✅ WebSocket broadcast completed");
     }
 
-    private WebSocketMessage createWebSocketMessage(EarthquakeEvent event) {
-        String type = event.getMagnitude() >= 6.0 ? "CRITICAL_ALERT" : "EARTHQUAKE";
-        String severity = determineSeverity(event.getMagnitude());
-        String title = createTitle(event);
-        String message = createMessage(event);
-
+    private WebSocketMessage createMessage(EarthquakeEvent event) {
+        double mag = event.getMagnitude();
         return WebSocketMessage.builder()
                 .messageId(UUID.randomUUID().toString())
-                .type(type)
-                .title(title)
-                .message(message)
+                .type(mag >= HIGH_THRESHOLD ? "CRITICAL_ALERT" : "EARTHQUAKE")
+                .title(getTitle(mag))
+                .message(String.format("Magnitude %.1f earthquake at %s (%.4f, %.4f)",
+                        mag, event.getLocation(), event.getLatitude(), event.getLongitude()))
                 .earthquakeData(event)
                 .timestamp(LocalDateTime.now())
-                .severity(severity)
+                .severity(getSeverity(mag))
                 .build();
     }
 
-    private String determineDestination(EarthquakeEvent event) {
-        if (event.getMagnitude() >= 6.0) {
-            return "/topic/critical-alerts";
-        }
-        return "/topic/earthquakes";
+    private String getTitle(double magnitude) {
+        if (magnitude >= CRITICAL_THRESHOLD) return "CRITICAL EARTHQUAKE ALERT";
+        if (magnitude >= HIGH_THRESHOLD) return "HIGH MAGNITUDE EARTHQUAKE";
+        if (magnitude >= MODERATE_THRESHOLD) return "Earthquake Detected";
+        return "Seismic Activity";
     }
 
-    private String determineSeverity(Double magnitude) {
-        if (magnitude >= 7.0) return "CRITICAL";
-        if (magnitude >= 6.0) return "ERROR";
-        if (magnitude >= 5.0) return "WARNING";
+    private String getSeverity(double magnitude) {
+        if (magnitude >= CRITICAL_THRESHOLD) return "CRITICAL";
+        if (magnitude >= HIGH_THRESHOLD) return "ERROR";
+        if (magnitude >= MODERATE_THRESHOLD) return "WARNING";
         return "INFO";
-    }
-
-    private String createTitle(EarthquakeEvent event) {
-        if (event.getMagnitude() >= 7.0) {
-            return "🚨 CRITICAL EARTHQUAKE ALERT";
-        } else if (event.getMagnitude() >= 6.0) {
-            return "⚠️ HIGH MAGNITUDE EARTHQUAKE";
-        } else if (event.getMagnitude() >= 5.0) {
-            return "📢 Earthquake Detected";
-        }
-        return "ℹ️ Seismic Activity";
-    }
-
-    private String createMessage(EarthquakeEvent event) {
-        return String.format(
-                "Magnitude %.1f earthquake detected at %s. Location: %.4f°, %.4f°",
-                event.getMagnitude(),
-                event.getLocation(),
-                event.getLatitude(),
-                event.getLongitude()
-        );
     }
 }

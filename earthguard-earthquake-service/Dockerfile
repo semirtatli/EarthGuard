@@ -3,13 +3,15 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
-# Copy parent pom
+# Copy parent pom and all module poms for dependency resolution
 COPY pom.xml .
 COPY earthguard-common/pom.xml earthguard-common/
 COPY earthguard-earthquake-service/pom.xml earthguard-earthquake-service/
+COPY earthguard-notification-service/pom.xml earthguard-notification-service/
+COPY earthguard-api-gateway/pom.xml earthguard-api-gateway/
 
 # Download dependencies (cached layer)
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B -pl earthguard-earthquake-service,earthguard-common -am
 
 # Copy source code
 COPY earthguard-common/src earthguard-common/src

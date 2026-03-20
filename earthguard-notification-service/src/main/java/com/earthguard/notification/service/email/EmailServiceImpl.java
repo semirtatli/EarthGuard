@@ -27,9 +27,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendEarthquakeAlert(EarthquakeEvent event, String recipient) {
         if (!emailEnabled) {
-            log.info("📧 EMAIL (MOCK): Would send earthquake alert to {}", recipient);
-            log.info("   Subject: {}", EmailTemplate.getSubject(event));
-            log.info("   Earthquake: {} at {}", event.getMagnitude(), event.getLocation());
+            log.debug("Email disabled - skipping alert to {} for earthquake {}", recipient, event.getEarthquakeId());
             return;
         }
 
@@ -43,26 +41,18 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(EmailTemplate.getHtmlBody(event), true);
 
             mailSender.send(message);
-
-            log.info("✅ Email sent successfully to {}", recipient);
+            log.info("Email sent to {} for earthquake {}", recipient, event.getEarthquakeId());
 
         } catch (MessagingException e) {
-            log.error("❌ Failed to send email to {}: {}", recipient, e.getMessage(), e);
+            log.error("Failed to send email to {}: {}", recipient, e.getMessage());
         }
     }
 
     @Override
     public void sendBulkAlert(EarthquakeEvent event, String[] recipients) {
-        log.info("📧 Sending bulk alert to {} recipients", recipients.length);
-
+        log.info("Sending bulk alert to {} recipients", recipients.length);
         for (String recipient : recipients) {
-            try {
-                sendEarthquakeAlert(event, recipient);
-            } catch (Exception e) {
-                log.error("Failed to send email to {}", recipient, e);
-            }
+            sendEarthquakeAlert(event, recipient);
         }
-
-        log.info("✅ Bulk alert completed");
     }
 }

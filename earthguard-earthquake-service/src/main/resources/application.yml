@@ -3,14 +3,14 @@ spring:
     name: earthquake-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/earthguard
-    username: earthguard
-    password: earthguard123
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:earthguard}
+    username: ${DB_USERNAME:earthguard}
+    password: ${DB_PASSWORD:earthguard123}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: true
     properties:
       hibernate:
@@ -24,17 +24,24 @@ spring:
       thread-name-prefix: earthquake-scheduler-
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
       timeout: 2000ms
 
   cache:
@@ -47,22 +54,27 @@ server:
 
 logging:
   level:
-    com.earthguard: DEBUG
-    org.hibernate.SQL: DEBUG
+    com.earthguard: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL:INFO}
 
 # CORS Configuration
 earthguard:
   cors:
     allowed-origins:
+      - http://localhost
       - http://localhost:3000
       - http://localhost:5173
       - https://*.earthguard.com
+      - ${FRONTEND_URL:http://localhost:3000}
     max-age: 3600
 
   # JWT Configuration
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970334336763979244226452948404D6351
-    expiration: 86400000 # 24 hours (24 * 60 * 60 * 1000 milliseconds)
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970334336763979244226452948404D6351}
+    expiration: ${JWT_EXPIRATION:86400000}
+
+  gateway:
+    url: ${GATEWAY_URL:http://localhost:8080}
 
 # Swagger/OpenAPI Configuration
 springdoc:

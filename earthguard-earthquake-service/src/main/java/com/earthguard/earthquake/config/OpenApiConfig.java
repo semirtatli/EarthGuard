@@ -20,6 +20,9 @@ public class OpenApiConfig {
     @Value("${server.port:8081}")
     private String serverPort;
 
+    @Value("${earthguard.gateway.url:http://localhost:8080}")
+    private String gatewayUrl;
+
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
@@ -30,26 +33,26 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .description("""
                             # EarthGuard - Earthquake Early Warning System
-                            
+
                             A comprehensive earthquake monitoring and alert system with real-time notifications.
-                            
+
                             ## Features
-                            - 🌍 Real-time earthquake data from USGS
-                            - 🔔 Instant notifications via WebSocket
-                            - 📧 Email alerts for critical earthquakes
-                            - 🗺️ Location-based filtering
-                            - 📊 Advanced search and pagination
-                            - 🔒 JWT authentication
-                            - 🚀 Redis caching for performance
-                            - 📈 Rate limiting protection
-                            
+                            - Real-time earthquake data from USGS
+                            - Instant notifications via WebSocket
+                            - Email alerts for critical earthquakes
+                            - Location-based filtering
+                            - Advanced search and pagination
+                            - JWT authentication
+                            - Redis caching for performance
+                            - Rate limiting protection
+
                             ## Authentication
                             Most endpoints require JWT authentication. To get started:
                             1. Register a new account at `POST /api/auth/register`
                             2. Login at `POST /api/auth/login` to get your JWT token
                             3. Click the 'Authorize' button and enter your token
                             4. You can now access protected endpoints
-                            
+
                             ## Rate Limiting
                             - Public endpoints: 10 requests/second per IP
                             - Authenticated endpoints: 20 requests/second per user
@@ -66,7 +69,7 @@ public class OpenApiConfig {
                                 .url("http://localhost:" + serverPort)
                                 .description("Development Server"),
                         new Server()
-                                .url("http://localhost:8080")
+                                .url(gatewayUrl)
                                 .description("API Gateway")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))

@@ -24,6 +24,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // WebSocket endpoint that clients will connect to
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
+                        "http://localhost",
                         "http://localhost:3000",
                         "http://localhost:5173",
                         "https://*.earthguard.com"

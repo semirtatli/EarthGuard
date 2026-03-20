@@ -3,13 +3,15 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
-# Copy parent pom
+# Copy parent pom and all module poms for dependency resolution
 COPY pom.xml .
 COPY earthguard-common/pom.xml earthguard-common/
+COPY earthguard-earthquake-service/pom.xml earthguard-earthquake-service/
 COPY earthguard-notification-service/pom.xml earthguard-notification-service/
+COPY earthguard-api-gateway/pom.xml earthguard-api-gateway/
 
 # Download dependencies
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B -pl earthguard-notification-service,earthguard-common -am
 
 # Copy source code
 COPY earthguard-common/src earthguard-common/src
@@ -29,7 +31,7 @@ USER spring:spring
 COPY --from=builder /app/earthguard-notification-service/target/*.jar app.jar
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/api/notifications/health || exit 1
 
 EXPOSE 8082
 

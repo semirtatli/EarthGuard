@@ -50,9 +50,7 @@ public class DataInitializer {
                 userRepository.save(admin);
                 userRepository.save(user);
 
-                log.info("✅ Default users created:");
-                log.info("   - Admin: username=admin, password=admin123");
-                log.info("   - User: username=testuser, password=user123");
+                log.info("Default users created: admin, testuser");
             }
         };
     }

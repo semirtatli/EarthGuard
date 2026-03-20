@@ -99,14 +99,15 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-earthguard}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-earthguard}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-earthguard123}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      JWT_SECRET: ${JWT_SECRET:-earthguard-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long}
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB:-earthguard}
+      DB_USERNAME: ${POSTGRES_USER:-earthguard}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-earthguard123}
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970334336763979244226452948404D6351}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      JPA_DDL_AUTO: update
     networks:
       - earthguard-network
     restart: unless-stopped
@@ -129,7 +130,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
       SPRING_MAIL_PORT: ${MAIL_PORT:-587}
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
@@ -138,6 +139,12 @@ services:
     networks:
       - earthguard-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/ws/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # API Gateway
   api-gateway:
@@ -152,19 +159,34 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
+      REDIS_HOST: redis
       EARTHQUAKE_SERVICE_URL: http://earthquake-service:8081
       NOTIFICATION_SERVICE_URL: http://notification-service:8082
+      NOTIFICATION_WS_URL: ws://notification-service:8082
     networks:
       - earthguard-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/earthquakes/count"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # Frontend
+  frontend:
+    build:
+      context: ./earthguard-frontend
+      dockerfile: Dockerfile
+    container_name: earthguard-frontend
+    depends_on:
+      - api-gateway
+      - notification-service
+    ports:
+      - "80:80"
+    networks:
+      - earthguard-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

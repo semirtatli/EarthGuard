@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +26,9 @@ public interface EarthquakeRepository extends JpaRepository<Earthquake, String>,
 
     // Last N earthquake
     List<Earthquake> findTop10ByOrderByTimestampDesc();
+
+    // Last N earthquakes with configurable limit
+    List<Earthquake> findAllByOrderByTimestampDesc(Pageable pageable);
 
     // Location based search (basic version - text search)
     List<Earthquake> findByLocationContainingIgnoreCase(String location);
