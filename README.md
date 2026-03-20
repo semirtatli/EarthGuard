@@ -4,19 +4,66 @@
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen?style=for-the-badge&logo=spring)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-yellow?style=for-the-badge&logo=javascript)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?style=for-the-badge&logo=vercel)
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=for-the-badge&logo=docker)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 **A learning-focused earthquake monitoring system built with modern microservices architecture**
 
-[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API Documentation](#-api-documentation) • [Tech Stack](#-tech-stack)
+[Live Frontend](#-frontend--live-demo) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API Documentation](#-api-documentation) • [Tech Stack](#-tech-stack)
 
 </div>
 
 ---
 
+## 🖥️ Frontend — Live Demo
+
+> **Deploy the frontend instantly with [Vercel](https://vercel.com) — no build step required.**
+
+The EarthGuard frontend is a responsive, single-page web application that connects to the backend microservices in real time.
+
+### Frontend Features
+
+- 🗺️ **Interactive Leaflet map** — visualize earthquake locations with color-coded magnitude markers
+- 📋 **Live earthquake list** — shows the most recent events, auto-refreshed every 30 seconds
+- 🔔 **Real-time WebSocket alerts** — push notifications for new or critical earthquakes without page reload
+- 🔐 **JWT authentication** — register / login flow with token stored in localStorage
+- ⚙️ **User preferences** — configure location, radius, minimum magnitude and notification channels
+- 📱 **Fully responsive** — works on desktop and mobile
+
+### Deploy Frontend to Vercel
+
+```bash
+# 1. Fork or clone this repository
+
+# 2. Go to https://vercel.com → New Project → Import the repo
+#    Set the Root Directory to:  earthguard-frontend
+
+# 3. Before deploying, open earthguard-frontend/vercel.json
+#    and replace YOUR_BACKEND_URL with your API Gateway address:
+#      e.g. "destination": "https://api.yourdomain.com/api/:path*"
+
+# 4. Click Deploy — done!
+```
+
+> **Note:** The frontend communicates with the backend via `/api/*` (proxied through `vercel.json` rewrites)
+> and with the Notification Service via WebSocket (`/ws`). Make sure your backend is publicly reachable.
+
+### Run Frontend Locally (no backend needed for UI)
+
+```bash
+# Serve with any static server, e.g.:
+npx serve earthguard-frontend
+# or
+python -m http.server 3000 --directory earthguard-frontend
+```
+
+---
+
 ## 📋 Table of Contents
 
+- [Frontend — Live Demo](#%EF%B8%8F-frontend--live-demo)
 - [About This Project](#-about-this-project)
 - [Features](#-features)
 - [Architecture](#-architecture)
@@ -174,6 +221,13 @@ Rather than just reading about these technologies, this project implements them 
 ---
 
 ## 🛠️ Tech Stack
+
+### Frontend Technologies
+- **Vanilla JavaScript (ES6+)** - No framework, zero build tooling
+- **Leaflet.js** - Interactive maps with custom markers
+- **SockJS + STOMP** - WebSocket client for real-time events
+- **Nginx** - Static file server & reverse proxy (Docker mode)
+- **Vercel** - Static hosting with API rewrite support
 
 ### Backend Technologies
 - **Java 21** - Latest LTS version with modern features
@@ -424,6 +478,21 @@ earthguard/
 │   │   └── application.yml               # Routes & Filters
 │   ├── Dockerfile
 │   └── pom.xml
+│
+├── earthguard-frontend/                  # Web frontend (Vercel / Nginx)
+│   ├── index.html                        # Single-page application entry point
+│   ├── css/
+│   │   └── style.css                     # All styles
+│   ├── js/
+│   │   ├── api.js                        # REST API client
+│   │   ├── auth.js                       # Login / Register logic
+│   │   ├── dashboard.js                  # Earthquake list + map
+│   │   ├── preferences.js                # User preference form
+│   │   ├── websocket.js                  # STOMP WebSocket client
+│   │   └── app.js                        # App bootstrap & routing
+│   ├── nginx.conf                        # Nginx config (Docker mode)
+│   ├── Dockerfile                        # Nginx-based container
+│   └── vercel.json                       # Vercel rewrite config
 │
 ├── docker-compose.yml                    # Development setup
 ├── docker-compose.prod.yml               # Production setup
@@ -698,7 +767,32 @@ void testFindByMagnitudeGreaterThanEqual() {
 
 ## 🚀 Deployment
 
-### Production Deployment with Docker
+### Frontend Deployment — Vercel (Recommended)
+
+The `earthguard-frontend/` folder is a static site and can be deployed to Vercel in seconds.
+
+**Steps:**
+1. Push this repo to GitHub
+2. Go to [vercel.com](https://vercel.com) → **New Project** → Import your repo
+3. Set **Root Directory** → `earthguard-frontend`
+4. Edit `earthguard-frontend/vercel.json` — replace `YOUR_BACKEND_URL` with your API Gateway URL:
+   ```json
+   {
+     "rewrites": [
+       {
+         "source": "/api/:path*",
+         "destination": "https://your-api-gateway.com/api/:path*"
+       }
+     ]
+   }
+   ```
+5. Click **Deploy**
+
+> **WebSocket Note:** Vercel does not proxy WebSocket connections. The real-time notification feature (`/ws`) requires the Notification Service (port 8082) to be reachable from the client directly, or you must use a full-stack hosting solution (Docker on a VPS).
+
+---
+
+### Backend Deployment with Docker
 ```bash
 # 1. Configure production environment
 cp .env.example .env
